@@ -33,60 +33,18 @@ public class ViewEventActivity extends Activity {
         setContentView(R.layout.activity_display_message);
         // dismiss notification
         int notificationId = 001;
-        useTV();
+
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
         notificationManager.cancel(notificationId);
     }
 
-    public void useTV(){
+    public void useTV(View view){
         // "manually" do what the other view does when opened.
         // learn how intents work
-
-        //TV Opening Code
-        Toast.makeText(getApplicationContext(),"Starting Application",Toast.LENGTH_LONG).show();
-        Device.search(new DeviceAsyncResult<List<Device>>() {
-            @Override
-            public void onResult(List<Device> devices) {
-                final Device device = devices.iterator().next();
-                device.getApplication("smarthome", new DeviceAsyncResult<Application>() {
-                    @Override
-                    public void onResult(Application application) {
-                        Map<String, String> parameters = new HashMap<String, String>();
-                        parameters.put("launchby", "mobile");
-                        application.launch(parameters, new ApplicationAsyncResult<Boolean>() {
-                            @Override
-                            public void onResult(final Boolean aBoolean) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(getApplicationContext(),"Application Launched",Toast.LENGTH_LONG).show();
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onError(ApplicationError applicationError) {
-
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(DeviceError deviceError) {
-
-                    }
-                });
-            }
-
-            @Override
-            public void onError(DeviceError deviceError) {
-
-            }
-        });
-
         Intent i = new Intent(this, ActionEventActivity.class);
         startActivity(i);
+
     }
 
     @Override

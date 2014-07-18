@@ -74,7 +74,6 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                         if(temp.getMinor() == 319){
                             Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
                             if(temp.getAccuracy()<3){
-                                Log.e("Beacon Status","entered");
                                 if(commandIssued == false){
                                     sendMessage();
                                     commandIssued = true;

@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="1_multiscreen-android-1.1.11">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../SmartHomeDemo/libs/multiscreen-android-1.1.11.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

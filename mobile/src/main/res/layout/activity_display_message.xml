@@ -12,15 +12,17 @@
     <TextView
         android:text="@string/chooseTV"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:id="@+id/textView" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/imageButton"
-        android:layout_marginTop="44dp"
-        android:src="@drawable/smart_tv"
-        android:layout_marginRight="44dp"
-        android:onClick="useTV" />
+        android:src="@drawable/smart_tvweb"
+        android:onClick="useTV"
+        android:layout_marginTop="100dp"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
