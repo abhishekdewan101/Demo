@@ -1,14 +1,12 @@
 package com.samsung.jschettino.wearit;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.samsung.jschettino.wearit.R;
 import com.samsung.multiscreen.application.Application;
 import com.samsung.multiscreen.application.ApplicationAsyncResult;
 import com.samsung.multiscreen.application.ApplicationError;
@@ -20,8 +18,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ActionEventActivity extends Activity {
-
+/**
+ * Created by a.dewan on 7/18/14.
+ */
+public class Stalk extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +51,7 @@ public class ActionEventActivity extends Activity {
             @Override
             public void onResult(List<Device> devices) {
                 final Device device = devices.iterator().next();
-                device.getApplication("smarthome", new DeviceAsyncResult<Application>() {
+                device.getApplication("smarthome2", new DeviceAsyncResult<Application>() {
                     @Override
                     public void onResult(Application application) {
                         Map<String, String> parameters = new HashMap<String, String>();
@@ -87,18 +87,5 @@ public class ActionEventActivity extends Activity {
             }
         });
 
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

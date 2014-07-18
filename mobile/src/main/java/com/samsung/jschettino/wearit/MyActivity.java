@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -19,6 +20,22 @@ import com.radiusnetworks.ibeacon.IBeacon;
 import com.radiusnetworks.ibeacon.*;
 import com.radiusnetworks.ibeacon.IBeaconManager;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Iterator;
 //import android.support.v4.app.NotificationCompat.WearableExtender;
@@ -27,13 +44,16 @@ import java.util.Iterator;
 public class MyActivity extends Activity implements IBeaconConsumer {
     public static final String EXTRA_EVENT_ID = "eventId";
     private boolean commandIssued = false;
+    private String USER_ID;
    // private TextView process;
+   private IBeacon oldBeacon;
     private IBeaconManager iBeaconManager = IBeaconManager.getInstanceForApplication(this);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
         //process = (TextView) findViewById(R.id.process);
+        USER_ID = Build.MODEL +"-"+Build.BRAND+"-"+Build.SERIAL;
         iBeaconManager.bind(this);
     }
 
@@ -63,6 +83,34 @@ public class MyActivity extends Activity implements IBeaconConsumer {
         return super.onOptionsItemSelected(item);
     }
 
+    private IBeacon returnClosest(Collection<IBeacon>iBeacons){
+        IBeacon tempBeacon = null;
+        Iterator<IBeacon>iBeaconIterator = iBeacons.iterator();
+        double closest = 100000d;
+        while(iBeaconIterator.hasNext()){
+            IBeacon iBeacon = iBeaconIterator.next();
+            if(iBeacon.getMinor()==319) {
+                Log.e("Closest Outer", iBeacon.getMinor() + "-" + iBeacon.getAccuracy());
+            }
+            if(iBeacon.getAccuracy()<2) {
+                if (iBeacon.getAccuracy() < closest) {
+                    closest = iBeacon.getAccuracy();
+                    tempBeacon = iBeacon;
+                    oldBeacon = tempBeacon;
+                    Log.e("Closest", iBeacon.getMinor() + "");
+                }
+            }
+        }
+        if(tempBeacon == null){
+            if(oldBeacon!=null) {
+                tempBeacon = oldBeacon;
+            }else{
+                tempBeacon = new IBeacon("UUUDS",100,1);
+            }
+        }
+        return tempBeacon;
+    }
+
     @Override
     public void onIBeaconServiceConnect() {
             iBeaconManager.setRangeNotifier(new RangeNotifier() {
@@ -72,10 +120,11 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                     while(iBeaconIterator.hasNext()){
                         IBeacon temp = iBeaconIterator.next();
                         if(temp.getMinor() == 319){
+                            if(temp.getAccuracy() > 3){
                             Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
-                            if(temp.getAccuracy()<3){
-                                if(commandIssued == false){
+                                if(commandIssued == false) {
                                     sendMessage();
+                                    setState(true, temp.getMajor(), temp.getMinor());
                                     commandIssued = true;
                                 }
                             }
@@ -132,6 +181,11 @@ public class MyActivity extends Activity implements IBeaconConsumer {
         Intent choiceIntent = new Intent(this, ActionEventActivity.class);
         PendingIntent viewShareIntent =
                 PendingIntent.getActivity(this, 0, choiceIntent, 0);
+
+// make third page
+        Intent stalk = new Intent(this, Stalk.class);
+        PendingIntent stalkingIntent =
+                PendingIntent.getActivity(this, 0, stalk, 0);
 //choiceIntent.putExtra(EXTRA_EVENT_ID, 1); //event_id
 
         NotificationCompat.Builder notificationBuilder =
@@ -144,7 +198,9 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                         .setContentIntent(viewPendingIntent)
                         .setStyle(bigStyle)
                         .addAction(R.drawable.ic_stat_hardware_dock,
-                                getString(R.string.useTv), viewShareIntent);
+                                getString(R.string.useTv), viewShareIntent)
+                        .addAction(R.drawable.powered_by_google_dark,
+                getString(R.string.useStalk), stalkingIntent);
 // Get an instance of the NotificationManager service
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
@@ -152,5 +208,75 @@ public class MyActivity extends Activity implements IBeaconConsumer {
 // Build the notification and issues it with notification manager.
         notificationManager.notify(notificationId, notificationBuilder.build());
         Log.e("Beacon Status","Got out Send Message");
+    }
+
+    private void setState(boolean active, final int major,final int minor){
+        if(active) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String beaconName ="";
+                    HttpClient client = new DefaultHttpClient();
+                    HttpGet httpGet = new HttpGet("http://298a49bb.ngrok.com/beacons?major="+major+"&minor="+minor);
+                    StringBuilder builder =new StringBuilder();
+                    try {
+                        HttpResponse response = client.execute(httpGet);
+                        StatusLine statusLine = response.getStatusLine();
+                        int statusCode = statusLine.getStatusCode();
+                        if (statusCode == 200) {
+                            HttpEntity entity = response.getEntity();
+                            InputStream content = entity.getContent();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                builder.append(line);
+                            }
+                        } else {
+                            Log.e("ERROR IN READING DATA", "FAILED TO GET ANY DATA");
+                        }
+                    } catch (ClientProtocolException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        JSONArray jsonArray = new JSONArray(builder.toString());
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+
+                        beaconName = jsonObject.getString("name");
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+
+
+                    try {
+                        HttpGet httpGet1 = new HttpGet("http://298a49bb.ngrok.com/users/setactive?uniqueid="+ URLEncoder.encode(USER_ID, "utf-8")+"&activebeacon="+URLEncoder.encode(beaconName,"utf-8"));
+                        HttpResponse response = client.execute(httpGet1);
+                    } catch (ClientProtocolException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }else{
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    HttpClient client = new DefaultHttpClient();
+                    HttpGet httpGet1 = new HttpGet("http://298a49bb.ngrok.com/users/setpassive?uniqueid="+USER_ID);
+                    try {
+                        HttpResponse response = client.execute(httpGet1);
+                    } catch (ClientProtocolException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
     }
 }

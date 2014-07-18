@@ -47,6 +47,14 @@ public class ViewEventActivity extends Activity {
 
     }
 
+    public void useStalk(View view){
+        // "manually" do what the other view does when opened.
+        // learn how intents work
+        Intent i = new Intent(this, Stalk.class);
+        startActivity(i);
+
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

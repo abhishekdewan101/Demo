@@ -33,6 +33,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.samsung.jschettino.wearit.MyActivity" />
         </activity>
+
+        <activity
+            android:name=".Stalk"
+            android:label="@string/title_stalk"
+            android:parentActivityName=".MyActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.samsung.jschettino.wearit.MyActivity" />
+        </activity>
     </application>
 
 </manifest>

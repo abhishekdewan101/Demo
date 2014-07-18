@@ -7,8 +7,10 @@
     <string name="title_activity_view_event">My Message</string>
     <string name="hello_world1">Hello World</string>
     <string name="title_activity_action_event">Use The SmartTV</string>
+    <string name="title_stalk">Stalk</string>
     <string name="usingTv">You\'re Ridin It, Dude!</string>
     <string name="useTv">Use the TV</string>
+    <string name="useStalk">Start Stalking</string>
     <string name="chooseTV">Tap the button to use the TV!</string>
     <string name="testdriver">Test Driver. Tap button to simulate discovery of TV</string>
 
