@@ -119,12 +119,12 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                     Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
                     while(iBeaconIterator.hasNext()){
                         IBeacon temp = iBeaconIterator.next();
-                        if(temp.getMinor() == 319){
-                            if(temp.getAccuracy() > 3){
+                            if(temp.getAccuracy() > 2){
+                                setState(true, temp.getMajor(), temp.getMinor());
+                                if(temp.getMinor() == 319){
                             Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
                                 if(commandIssued == false) {
                                     sendMessage();
-                                    setState(true, temp.getMajor(), temp.getMinor());
                                     commandIssued = true;
                                 }
                             }
