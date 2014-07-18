@@ -90,7 +90,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
         while(iBeaconIterator.hasNext()){
             IBeacon iBeacon = iBeaconIterator.next();
             if(iBeacon.getMinor()==319) {
-                Log.e("Closest Outer", iBeacon.getMinor() + "-" + iBeacon.getAccuracy());
+              //  Log.e("Closest Outer", iBeacon.getMinor() + "-" + iBeacon.getAccuracy());
             }
             if(iBeacon.getAccuracy()<2) {
                 if (iBeacon.getAccuracy() < closest) {
@@ -119,12 +119,12 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                     Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
                     while(iBeaconIterator.hasNext()){
                         IBeacon temp = iBeaconIterator.next();
-                        if(temp.getMinor() == 319){
-                            if(temp.getAccuracy() > 3){
-                            Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
+                            if(temp.getAccuracy() < 2){
+                              //  Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
+                                setState(true, temp.getMajor(), temp.getMinor());
+                                if(temp.getMinor() == 319){
                                 if(commandIssued == false) {
                                     sendMessage();
-                                    setState(true, temp.getMajor(), temp.getMinor());
                                     commandIssued = true;
                                 }
                             }
