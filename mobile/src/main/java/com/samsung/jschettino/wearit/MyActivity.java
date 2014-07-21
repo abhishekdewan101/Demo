@@ -13,6 +13,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,11 +24,15 @@ import com.radiusnetworks.ibeacon.IBeaconManager;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,8 +42,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 //import android.support.v4.app.NotificationCompat.WearableExtender;
 
 
@@ -47,13 +55,26 @@ public class MyActivity extends Activity implements IBeaconConsumer {
     private String USER_ID;
    // private TextView process;
    private IBeacon oldBeacon;
+    private EditText name;
+    private Button run;
+    private TextView nameLabel;
+    Boolean startScans = false;
     private IBeaconManager iBeaconManager = IBeaconManager.getInstanceForApplication(this);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
         //process = (TextView) findViewById(R.id.process);
+        run = (Button)findViewById(R.id.run);
+        name = (EditText) findViewById(R.id.username);
+        nameLabel = (TextView) findViewById(R.id.name);
         USER_ID = Build.MODEL +"-"+Build.BRAND+"-"+Build.SERIAL;
+        run.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkUser(USER_ID);
+            }
+        });
         iBeaconManager.bind(this);
     }
 
@@ -116,16 +137,18 @@ public class MyActivity extends Activity implements IBeaconConsumer {
             iBeaconManager.setRangeNotifier(new RangeNotifier() {
                 @Override
                 public void didRangeBeaconsInRegion(Collection<IBeacon> iBeacons, Region region) {
-                    Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
-                    while(iBeaconIterator.hasNext()){
-                        IBeacon temp = iBeaconIterator.next();
-                            if(temp.getAccuracy() < 2){
-                              //  Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
+                    if(startScans == true) {
+                        Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
+                        while (iBeaconIterator.hasNext()) {
+                            IBeacon temp = iBeaconIterator.next();
+                            if (temp.getAccuracy() < 2) {
+                                //  Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
                                 setState(true, temp.getMajor(), temp.getMinor());
-                                if(temp.getMinor() == 319){
-                                if(commandIssued == false) {
-                                    sendMessage();
-                                    commandIssued = true;
+                                if (temp.getMinor() == 319) {
+                                    if (commandIssued == false) {
+                                        sendMessage();
+                                        commandIssued = true;
+                                    }
                                 }
                             }
                         }
@@ -162,6 +185,87 @@ public class MyActivity extends Activity implements IBeaconConsumer {
 //        }catch (RemoteException e) {
 //        }
     }
+
+    private void checkUser(final String USER_ID) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpClient client = new DefaultHttpClient();
+                HttpGet httpGet = new HttpGet("http://298a49bb.ngrok.com/users?uniqueid="+USER_ID);
+                StringBuilder builder =new StringBuilder();
+                try {
+                    HttpResponse response = client.execute(httpGet);
+                    StatusLine statusLine = response.getStatusLine();
+                    int statusCode = statusLine.getStatusCode();
+                    if (statusCode == 200) {
+                        HttpEntity entity = response.getEntity();
+                        InputStream content = entity.getContent();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            builder.append(line);
+                        }
+                    } else {
+                        Log.e("ERROR IN READING DATA", "FAILED TO GET ANY DATA");
+                    }
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    final JSONArray jsonArray = new JSONArray(builder.toString());
+                    if(jsonArray.length() == 0){
+                        HttpClient httpClient = new DefaultHttpClient();
+                        HttpPost httpPost = new HttpPost("http://298a49bb.ngrok.com/users");
+                        try{
+                            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                            nameValuePairs.add(new BasicNameValuePair("user[name]",name.getText().toString()));
+                            nameValuePairs.add(new BasicNameValuePair("user[uniqueid]",USER_ID));
+                            nameValuePairs.add(new BasicNameValuePair("user[activebeacon]","null"));
+
+                            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                            httpClient.execute(httpPost);
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    name.setVisibility(View.GONE);
+                                    run.setVisibility(View.GONE);
+                                    nameLabel.setText(nameLabel.getText()+" "+name.getText().toString());
+                                }
+                            });
+                            startScans = true;
+                        }catch(ClientProtocolException e){
+                            e.printStackTrace();
+                        }catch (IOException e){
+                            e.printStackTrace();
+                        }
+                    }else {
+                        final JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                name.setVisibility(View.GONE);
+                                run.setVisibility(View.GONE);
+                                try {
+                                    nameLabel.setText(nameLabel.getText() + " " + jsonObject.getString("name"));
+                                }catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                        startScans = true;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+
+    }
+
 
     /** Called when the user clicks the Send button */
     public void sendMessage(){
