@@ -141,6 +141,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                         Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
                         while (iBeaconIterator.hasNext()) {
                             IBeacon temp = iBeaconIterator.next();
+                            setBeaconDetails(iBeacons);
                             if (temp.getAccuracy() < 2) {
                                 //  Log.e("Beacon Status Accuracy",temp.getAccuracy()+"");
                                 setState(true, temp.getMajor(), temp.getMinor());
@@ -312,6 +313,31 @@ public class MyActivity extends Activity implements IBeaconConsumer {
 // Build the notification and issues it with notification manager.
         notificationManager.notify(notificationId, notificationBuilder.build());
         Log.e("Beacon Status","Got out Send Message");
+    }
+
+
+    private void setBeaconDetails(final Collection<IBeacon> iBeacons){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
+                String beaconDetails = "";
+                while(iBeaconIterator.hasNext()){
+                    IBeacon tempBeacon = iBeaconIterator.next();
+                    beaconDetails = beaconDetails + tempBeacon.getMajor() +"::"+tempBeacon.getMinor()+"::"+tempBeacon.getAccuracy()+";";
+
+                }
+                HttpClient client = new DefaultHttpClient();
+                try {
+                    HttpGet httpGet1 = new HttpGet("http://298a49bb.ngrok.com/users/beacondetails?uniqueid="+URLEncoder.encode(USER_ID,"utf-8")+"&beacondetails="+URLEncoder.encode(beaconDetails,"utf-8"));
+                    HttpResponse response = client.execute(httpGet1);
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     private void setState(boolean active, final int major,final int minor){
