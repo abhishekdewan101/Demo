@@ -1,0 +1,7 @@
+{
+  "message":"Hey, I found a big display in this room. Do you want to use it?", "brief": "Found a display",
+  "services": [
+  {"name":"Use TV", "app":"smarthome", "icon":"ic_smart_tv"},
+  {"name":"Stalk", "app":"smarthome2", "icon":"ic_stalk"}
+  ]
+ }

@@ -9,7 +9,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MyActivity"
+            android:name=".DiscoverActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,24 +20,16 @@
         <activity
             android:name=".ViewEventActivity"
             android:label="@string/title_activity_view_event"
-            android:parentActivityName=".MyActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.samsung.jschettino.wearit.MyActivity" />
-        </activity>
-        <activity
-            android:name=".ActionEventActivity"
-            android:label="@string/title_activity_action_event"
-            android:parentActivityName=".MyActivity" >
+            android:parentActivityName=".DiscoverActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.samsung.jschettino.wearit.MyActivity" />
         </activity>
 
         <activity
-            android:name=".Stalk"
+            android:name=".PerformActionActvity"
             android:label="@string/title_stalk"
-            android:parentActivityName=".MyActivity" >
+            android:parentActivityName=".DiscoverActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.samsung.jschettino.wearit.MyActivity" />

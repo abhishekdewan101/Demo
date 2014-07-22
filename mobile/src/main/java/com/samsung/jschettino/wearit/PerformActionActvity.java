@@ -1,6 +1,7 @@
 package com.samsung.jschettino.wearit;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -24,7 +25,7 @@ import java.util.Map;
 /**
  * Created by a.dewan on 7/18/14.
  */
-public class Stalk extends Activity {
+public class PerformActionActvity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,7 +34,20 @@ public class Stalk extends Activity {
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
         notificationManager.cancel(notificationId);
-        useTV();
+
+        // get json from Extras/launch
+        Intent iin= getIntent();
+        Bundle b = iin.getExtras();
+
+        String app = null;
+
+        if(b!=null) {
+            app = (String) b.get(getString(R.string.extra_launch));
+
+            Log.i("yo", "app " + app);
+        }
+
+        use(app);
     }
 
 
@@ -44,17 +58,15 @@ public class Stalk extends Activity {
         return true;
     }
 
-    public void useTV(){
-        // "manually" do what the other view does when opened.
-        // learn how intents work
+    public void use(final String app){
 
         //TV Opening Code
-        Toast.makeText(getApplicationContext(), "Starting Application", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "Starting Application " +  ((app != null) ? app : "smarthome2"), Toast.LENGTH_LONG).show();
         Device.search(new DeviceAsyncResult<List<Device>>() {
             @Override
             public void onResult(List<Device> devices) {
                 final Device device = devices.iterator().next();
-                device.getApplication("smarthome2", new DeviceAsyncResult<Application>() {
+                device.getApplication((app != null) ? app : "smarthome2", new DeviceAsyncResult<Application>() {
                     @Override
                     public void onResult(Application application) {
                         Map<String, String> parameters = new HashMap<String, String>();
@@ -65,7 +77,7 @@ public class Stalk extends Activity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Toast.makeText(getApplicationContext(), "Application Launched", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getApplicationContext(), "Application " +  ((app != null) ? app : "smarthome2") + " Launched", Toast.LENGTH_LONG).show();
                                     }
                                 });
                             }

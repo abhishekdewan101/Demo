@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,7 +17,6 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.radiusnetworks.ibeacon.IBeacon;
 import com.radiusnetworks.ibeacon.*;
@@ -38,6 +38,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -49,22 +50,25 @@ import java.util.List;
 //import android.support.v4.app.NotificationCompat.WearableExtender;
 
 
-public class MyActivity extends Activity implements IBeaconConsumer {
-    public static final String EXTRA_EVENT_ID = "eventId";
+public class DiscoverActivity extends Activity implements IBeaconConsumer {
+
+    private String SpaceManager = "298a49bb.ngrok.com";     // hostname of space manager
+
+
     private boolean commandIssued = false;
     private String USER_ID;
-   // private TextView process;
-   private IBeacon oldBeacon;
+    private IBeacon oldBeacon;
     private EditText name;
     private Button run;
     private TextView nameLabel;
     Boolean startScans = false;
     private IBeaconManager iBeaconManager = IBeaconManager.getInstanceForApplication(this);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        //process = (TextView) findViewById(R.id.process);
+
         run = (Button)findViewById(R.id.run);
         name = (EditText) findViewById(R.id.username);
         nameLabel = (TextView) findViewById(R.id.name);
@@ -192,7 +196,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
             @Override
             public void run() {
                 HttpClient client = new DefaultHttpClient();
-                HttpGet httpGet = new HttpGet("http://298a49bb.ngrok.com/users?uniqueid="+USER_ID);
+                HttpGet httpGet = new HttpGet("http://"+SpaceManager+"/users?uniqueid="+USER_ID);
                 StringBuilder builder =new StringBuilder();
                 try {
                     HttpResponse response = client.execute(httpGet);
@@ -218,7 +222,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                     final JSONArray jsonArray = new JSONArray(builder.toString());
                     if(jsonArray.length() == 0){
                         HttpClient httpClient = new DefaultHttpClient();
-                        HttpPost httpPost = new HttpPost("http://298a49bb.ngrok.com/users");
+                        HttpPost httpPost = new HttpPost("http://"+SpaceManager+"/users");
                         try{
                             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
                             nameValuePairs.add(new BasicNameValuePair("user[name]",name.getText().toString()));
@@ -268,51 +272,69 @@ public class MyActivity extends Activity implements IBeaconConsumer {
     }
 
 
-    /** Called when the user clicks the Send button */
-    public void sendMessage(){
-        // Do something in response to button
-        Log.e("Beacon Status","Got into Send Message");
-        NotificationCompat.BigTextStyle bigStyle = new NotificationCompat.BigTextStyle();
-        bigStyle.bigText("Hey, I found a big display in this room. Do you want to use it?");
+    /**
+     * Called when the system detects proximity to a SmartTV
+     */
+     public void sendMessage() {
+
+        // this is our service list
+        // TBD get the service list from the Space Manager :)
+        InputStream inputStream = getResources().openRawResource(R.raw.service);
+        // String serviceList = getString (R.string.servicelist);
+         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+         byte buf[] = new byte[1024];
+         int len;
+         try {
+             while ((len = inputStream.read(buf)) != -1) {
+                 outputStream.write(buf, 0, len);
+             }
+             outputStream.close();
+             inputStream.close();
+         } catch (IOException e) {
+
+         }
+         String serviceList = outputStream.toString();
 
 
-        int notificationId = 001;
-// Build intent for notification content
-        Intent viewIntent = new Intent(this, ViewEventActivity.class);
-        PendingIntent viewPendingIntent =
-        PendingIntent.getActivity(this, 0, viewIntent, 0);
+         ServiceParser sp = new ServiceParser(this, serviceList);
 
-// make second page
-        Intent choiceIntent = new Intent(this, ActionEventActivity.class);
-        PendingIntent viewShareIntent =
-                PendingIntent.getActivity(this, 0, choiceIntent, 0);
 
-// make third page
-        Intent stalk = new Intent(this, Stalk.class);
-        PendingIntent stalkingIntent =
-                PendingIntent.getActivity(this, 0, stalk, 0);
-//choiceIntent.putExtra(EXTRA_EVENT_ID, 1); //event_id
+            // big message
+            NotificationCompat.BigTextStyle bigStyle = new NotificationCompat.BigTextStyle();
+            bigStyle.bigText(sp.getMessageTag());  //"Hey, I found a big display in this room. Do you want to use it?"
 
-        NotificationCompat.Builder notificationBuilder =
-                new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.ic_stat_hardware_dock)
-                        .setLargeIcon(BitmapFactory.decodeResource(
-                                getResources(), R.drawable.smart_tv))
-                        .setContentTitle("Event")
-                        .setContentText("Some Text Goes Here")
-                        .setContentIntent(viewPendingIntent)
-                        .setStyle(bigStyle)
-                        .addAction(R.drawable.ic_stat_hardware_dock,
-                                getString(R.string.useTv), viewShareIntent)
-                        .addAction(R.drawable.powered_by_google_dark,
-                getString(R.string.useStalk), stalkingIntent);
-// Get an instance of the NotificationManager service
-        NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(this);
 
-// Build the notification and issues it with notification manager.
-        notificationManager.notify(notificationId, notificationBuilder.build());
-        Log.e("Beacon Status","Got out Send Message");
+            int notificationId = 001;
+            // Build intent for default notification content
+            Intent viewIntent = new Intent(this, ViewEventActivity.class);
+            viewIntent.putExtra(getString(R.string.extra_action), 0);  //event_id
+            viewIntent.putExtra(getString(R.string.extra_launch), serviceList); // no launch action - pass service list as intent, render UI with it
+
+            PendingIntent viewPendingIntent =
+                    PendingIntent.getActivity(this, 0, viewIntent, 0);
+
+            // build base notification here. Use array of services to make additional options after
+            NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_smart_tv)
+                            .setLargeIcon(BitmapFactory.decodeResource(
+                                    getResources(), R.drawable.smart_tv))
+                            .setContentTitle(getString(R.string.discovery_message_title))
+                            .setContentText(sp.getBriefTag())
+                            .setContentIntent(viewPendingIntent)
+                            .setStyle(bigStyle);
+
+            sp.BuildNotifications(notificationBuilder);
+
+            // shake the user's wrist
+            notificationBuilder.setVibrate((new long[]{100, 100, 100}));
+
+            NotificationManagerCompat notificationManager =
+                    NotificationManagerCompat.from(this);
+
+            notificationManager.notify(notificationId, notificationBuilder.build());
+
     }
 
 
@@ -329,7 +351,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                 }
                 HttpClient client = new DefaultHttpClient();
                 try {
-                    HttpGet httpGet1 = new HttpGet("http://298a49bb.ngrok.com/users/beacondetails?uniqueid="+URLEncoder.encode(USER_ID,"utf-8")+"&beacondetails="+URLEncoder.encode(beaconDetails,"utf-8"));
+                    HttpGet httpGet1 = new HttpGet("http://"+SpaceManager+"/users/beacondetails?uniqueid="+URLEncoder.encode(USER_ID,"utf-8")+"&beacondetails="+URLEncoder.encode(beaconDetails,"utf-8"));
                     HttpResponse response = client.execute(httpGet1);
                 } catch (ClientProtocolException e) {
                     e.printStackTrace();
@@ -347,7 +369,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                 public void run() {
                     String beaconName ="";
                     HttpClient client = new DefaultHttpClient();
-                    HttpGet httpGet = new HttpGet("http://298a49bb.ngrok.com/beacons?major="+major+"&minor="+minor);
+                    HttpGet httpGet = new HttpGet("http://"+SpaceManager+"/beacons?major="+major+"&minor="+minor);
                     StringBuilder builder =new StringBuilder();
                     try {
                         HttpResponse response = client.execute(httpGet);
@@ -383,7 +405,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
 
 
                     try {
-                        HttpGet httpGet1 = new HttpGet("http://298a49bb.ngrok.com/users/setactive?uniqueid="+ URLEncoder.encode(USER_ID, "utf-8")+"&activebeacon="+URLEncoder.encode(beaconName,"utf-8"));
+                        HttpGet httpGet1 = new HttpGet("http://"+SpaceManager+"/users/setactive?uniqueid="+ URLEncoder.encode(USER_ID, "utf-8")+"&activebeacon="+URLEncoder.encode(beaconName,"utf-8"));
                         HttpResponse response = client.execute(httpGet1);
                     } catch (ClientProtocolException e) {
                         e.printStackTrace();
@@ -397,7 +419,7 @@ public class MyActivity extends Activity implements IBeaconConsumer {
                 @Override
                 public void run() {
                     HttpClient client = new DefaultHttpClient();
-                    HttpGet httpGet1 = new HttpGet("http://298a49bb.ngrok.com/users/setpassive?uniqueid="+USER_ID);
+                    HttpGet httpGet1 = new HttpGet("http://"+SpaceManager+"/users/setpassive?uniqueid="+USER_ID);
                     try {
                         HttpResponse response = client.execute(httpGet1);
                     } catch (ClientProtocolException e) {

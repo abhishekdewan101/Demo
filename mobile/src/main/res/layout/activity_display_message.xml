@@ -10,28 +10,41 @@
     android:id="@+id/view">
 
     <TextView
-        android:text="@string/chooseTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/name" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/description"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:text="@string/chooseTV"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/name"
+        android:layout_marginTop="21dp"
+        android:layout_below="@+id/description"
+        android:layout_alignEnd="@+id/spinner"
+        android:layout_alignParentStart="true" />
+
+    <Spinner
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:layout_below="@+id/name"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="18dp" />
 
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageButton"
+        android:id="@+id/smartTvButton"
+        android:onClick="onClick"
         android:src="@drawable/smart_tvweb"
-        android:onClick="useTV"
-        android:layout_marginTop="100dp"
-        android:layout_below="@+id/name"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stalk"
-        android:onClick="useStalk"
-        android:id="@+id/button"
-        android:layout_centerVertical="true"
-        android:layout_alignEnd="@+id/imageButton" />
+
 
 </RelativeLayout>

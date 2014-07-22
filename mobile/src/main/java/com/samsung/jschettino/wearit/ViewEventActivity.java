@@ -8,24 +8,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.samsung.jschettino.wearit.R;
-import com.samsung.multiscreen.application.Application;
-import com.samsung.multiscreen.application.ApplicationAsyncResult;
-import com.samsung.multiscreen.application.ApplicationError;
-import com.samsung.multiscreen.device.Device;
-import com.samsung.multiscreen.device.DeviceAsyncResult;
-import com.samsung.multiscreen.device.DeviceError;
-
-import org.w3c.dom.Text;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ViewEventActivity extends Activity {
+    private ServiceParser sp = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,12 +25,71 @@ public class ViewEventActivity extends Activity {
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
         notificationManager.cancel(notificationId);
+
+
+        // inflate the dropdown list of options
+        Spinner s1 = (Spinner) findViewById(R.id.spinner);
+
+        // get json from Extras/launch
+        Intent iin= getIntent();
+        Bundle b = iin.getExtras();
+
+        if(b!=null)
+        {
+            //int id = b.getInt("Action");
+            int id = (Integer) b.get(getString(R.string.extra_action));
+            String json =  (String) b.get(getString(R.string.extra_launch));
+
+            Log.i("yo", "Id: " + id + " " + json);
+
+            sp = new ServiceParser(this, json);
+
+            //TextView t=(TextView)findViewById(R.id.description);
+            ((TextView)findViewById(R.id.description)).setText(sp.getMessageTag());
+
+            sp.BuildChoiceList(s1);
+
+            s1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                    Log.i("yo","Position Select: " + position + " id " + id);
+                    // your code here
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                    // your code here
+                    Log.i("yo","Nothing Selected ");
+                }
+
+            });
+        } else {
+            s1.setVisibility(View.GONE); // no spinner
+            findViewById(R.id.smartTvButton).setVisibility(View.GONE); //no button
+            ((TextView)findViewById(R.id.description)).setText("Something seems to have gone pear shaped.");
+        }
+
+
+    }
+
+    public void onClick(View view) {
+        // what do they have selected?
+        Spinner s1 = (Spinner) findViewById(R.id.spinner);
+        String appname = sp.getAppByOffset(s1.getSelectedItemPosition());
+
+        Intent i = new Intent(this, PerformActionActvity.class);
+        // tell it the app to launch...
+        i.putExtra(getString(R.string.extra_launch), appname);
+        startActivity(i);
+
+
+
     }
 
     public void useTV(View view){
         // "manually" do what the other view does when opened.
         // learn how intents work
-        Intent i = new Intent(this, ActionEventActivity.class);
+        Intent i = new Intent(this, PerformActionActvity.class);
         startActivity(i);
 
     }
@@ -50,7 +97,7 @@ public class ViewEventActivity extends Activity {
     public void useStalk(View view){
         // "manually" do what the other view does when opened.
         // learn how intents work
-        Intent i = new Intent(this, Stalk.class);
+        Intent i = new Intent(this, PerformActionActvity.class);
         startActivity(i);
 
     }
