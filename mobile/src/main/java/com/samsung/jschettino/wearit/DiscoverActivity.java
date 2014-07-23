@@ -73,10 +73,40 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
         name = (EditText) findViewById(R.id.username);
         nameLabel = (TextView) findViewById(R.id.name);
         USER_ID = Build.MODEL +"-"+Build.BRAND+"-"+Build.SERIAL;
+        checkUser(USER_ID);
         run.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                checkUser(USER_ID);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        HttpClient httpClient = new DefaultHttpClient();
+                        HttpPost httpPost = new HttpPost("http://"+SpaceManager+"/users");
+                        try{
+                            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                            nameValuePairs.add(new BasicNameValuePair("user[name]",name.getText().toString()));
+                            nameValuePairs.add(new BasicNameValuePair("user[uniqueid]",USER_ID));
+                            nameValuePairs.add(new BasicNameValuePair("user[activebeacon]","null"));
+
+                            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                            httpClient.execute(httpPost);
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    name.setVisibility(View.GONE);
+                                    run.setVisibility(View.GONE);
+                                    nameLabel.setText(nameLabel.getText()+" "+name.getText().toString());
+                                }
+                            });
+                            startScans = true;
+                        }catch(ClientProtocolException e){
+                            e.printStackTrace();
+                        }catch (IOException e){
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
         });
         iBeaconManager.bind(this);
@@ -142,6 +172,7 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
                 @Override
                 public void didRangeBeaconsInRegion(Collection<IBeacon> iBeacons, Region region) {
                     if(startScans == true) {
+                        Log.e("Error","The beacon thing just started");
                         Iterator<IBeacon> iBeaconIterator = iBeacons.iterator();
                         while (iBeaconIterator.hasNext()) {
                             IBeacon temp = iBeaconIterator.next();
@@ -221,31 +252,8 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
                 try {
                     final JSONArray jsonArray = new JSONArray(builder.toString());
                     if(jsonArray.length() == 0){
-                        HttpClient httpClient = new DefaultHttpClient();
-                        HttpPost httpPost = new HttpPost("http://"+SpaceManager+"/users");
-                        try{
-                            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-                            nameValuePairs.add(new BasicNameValuePair("user[name]",name.getText().toString()));
-                            nameValuePairs.add(new BasicNameValuePair("user[uniqueid]",USER_ID));
-                            nameValuePairs.add(new BasicNameValuePair("user[activebeacon]","null"));
-
-                            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                            httpClient.execute(httpPost);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    name.setVisibility(View.GONE);
-                                    run.setVisibility(View.GONE);
-                                    nameLabel.setText(nameLabel.getText()+" "+name.getText().toString());
-                                }
-                            });
-                            startScans = true;
-                        }catch(ClientProtocolException e){
-                            e.printStackTrace();
-                        }catch (IOException e){
-                            e.printStackTrace();
-                        }
+                        startScans = false;
+                        Log.e("Error","User us not registered");
                     }else {
                         final JSONObject jsonObject = jsonArray.getJSONObject(0);
                         runOnUiThread(new Runnable() {

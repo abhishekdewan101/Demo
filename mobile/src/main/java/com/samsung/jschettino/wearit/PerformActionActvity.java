@@ -104,34 +104,4 @@ public class PerformActionActvity extends Activity {
         });
 
     }
-
-    public void closeTV(View view){
-        Log.e("Beacon Status", "Entered Close");
-        Device.search(new DeviceAsyncResult<List<Device>>() {
-            @Override
-            public void onResult(List<Device> devices) {
-                Device device = devices.iterator().next();
-                String channelID = "myChannelID";
-                Map<String,String> clientAttributes = new HashMap<String, String>();
-                clientAttributes.put("name","Mobile Client");
-                device.connectToChannel(channelID,clientAttributes,new DeviceAsyncResult<Channel>() {
-                    @Override
-                    public void onResult(Channel channel) {
-                        channel.broadcast("Hello Everyone except me");
-                    }
-
-                    @Override
-                    public void onError(DeviceError deviceError) {
-
-                    }
-                });
-
-            }
-
-            @Override
-            public void onError(DeviceError deviceError) {
-
-            }
-        });
-    }
 }
