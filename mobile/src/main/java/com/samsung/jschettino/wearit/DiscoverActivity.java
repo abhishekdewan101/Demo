@@ -1,7 +1,10 @@
 package com.samsung.jschettino.wearit;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -44,6 +47,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -109,6 +113,14 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
                 }).start();
             }
         });
+        //cancel the alarm
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(getApplicationContext().ALARM_SERVICE);
+        Intent intent = new Intent(this,DiscoverService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,0);
+        alarmManager.cancel(pendingIntent);
+        Log.e("Error","Cancelling Alarm");
+        pendingIntent.cancel();
         iBeaconManager.bind(this);
     }
 
@@ -121,9 +133,15 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
     }
 
     @Override
-    public void onDestroy(){
-        super.onDestroy();
-
+    public void onPause(){
+        Log.e("Error","Starting calendar instance");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.SECOND,10);
+        Intent intent = new Intent(this,DiscoverService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,0);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,cal.getTimeInMillis(),(1000*60*1),pendingIntent);
+        super.onPause();
     }
 
     @Override

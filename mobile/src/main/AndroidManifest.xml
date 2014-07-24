@@ -34,6 +34,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.samsung.jschettino.wearit.MyActivity" />
         </activity>
+        <service android:name=".DiscoverService">
+        </service>
     </application>
 
 </manifest>
