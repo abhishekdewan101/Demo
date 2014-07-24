@@ -123,7 +123,7 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
     @Override
     public void onDestroy(){
         super.onDestroy();
-        iBeaconManager.unBind(this);
+
     }
 
     @Override
