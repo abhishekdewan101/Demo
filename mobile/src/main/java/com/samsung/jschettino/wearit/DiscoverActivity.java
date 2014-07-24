@@ -140,7 +140,7 @@ public class DiscoverActivity extends Activity implements IBeaconConsumer {
         Intent intent = new Intent(this,DiscoverService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this,0,intent,0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,cal.getTimeInMillis(),(1000*60*1),pendingIntent);
+        alarmManager.setRepeating(AlarmManager.RTC,cal.getTimeInMillis(),(1000*60*1),pendingIntent);
         super.onPause();
     }
 
