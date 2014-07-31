@@ -56,7 +56,7 @@ import java.util.List;
 
 public class DiscoverActivity extends Activity implements IBeaconConsumer {
 
-    private String SpaceManager = "298a49bb.ngrok.com";     // hostname of space manager
+    private String SpaceManager = "65d5286d.ngrok.com";     // hostname of space manager
 
 
     private boolean commandIssued = false;

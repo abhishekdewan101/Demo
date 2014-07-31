@@ -42,7 +42,7 @@ import java.util.Iterator;
 public class DiscoverService extends IntentService implements IBeaconConsumer {
 
 
-    private String SpaceManager = "298a49bb.ngrok.com";     // hostname of space manager
+    private String SpaceManager = "65d5286d.ngrok.com";     // hostname of space manager
     private String USER_ID = Build.MODEL +"-"+Build.BRAND+"-"+Build.SERIAL;
     private IBeaconManager iBeaconManager = IBeaconManager.getInstanceForApplication(this);
     Boolean somethingFound = false;
